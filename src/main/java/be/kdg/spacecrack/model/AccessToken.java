@@ -8,11 +8,12 @@ import javax.persistence.*;
 @Entity
 @Table(name = "T_AccessToken")
 public class AccessToken {
+    @GeneratedValue
+    @Id
     private int accessTokenId;
 
+    @Column
     private String value;
-
-    private User user;
 
     public AccessToken() {
     }
@@ -21,25 +22,12 @@ public class AccessToken {
         this.value = value;
     }
 
-    @Id
-    @GeneratedValue
     public int getAccessTokenId() {
         return accessTokenId;
     }
 
-    @Column
     public String getValue() {
         return value;
-    }
-
-    @OneToOne
-    @PrimaryKeyJoinColumn
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public void setAccessTokenId(int accessTokenId) {

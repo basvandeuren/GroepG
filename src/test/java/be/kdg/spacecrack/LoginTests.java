@@ -30,7 +30,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import javax.servlet.ServletContext;
 
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -106,7 +105,7 @@ public class LoginTests {
         String userjson = objectMapper.writeValueAsString(testUser);
         System.out.println("Userjson : " + userjson);
 
-        MockHttpServletRequestBuilder requestBuilder = post("/accesstokens/request");
+        MockHttpServletRequestBuilder requestBuilder = post("/accesstokens");
         mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andExpect(content().contentType("application/json;charset=UTF-8")).andExpect(jsonPath("$.value", CoreMatchers.notNullValue()));
 
@@ -115,20 +114,32 @@ public class LoginTests {
 
     @Test
     public void testUserAlreadyLoggedRelogin() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post("/accesstokens/request");
+        MockHttpServletRequestBuilder requestBuilder = post("/accesstokens");
 
-        MvcResult firstResult = getMvcResult(requestBuilder);
+        MvcResult firstResult = mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
+                .andReturn();
+        MvcResult secondResult = mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
+                .andReturn();
+
         String expected = objectMapper.readValue(firstResult.getResponse().getContentAsString(), AccessToken.class).getValue();
-        //MvcResult secondResult = getMvcResult(requestBuilder);
-        //String actual = objectMapper.readValue(secondResult.getResponse().getContentAsString(), AccessToken.class).getValue();
-        assertTrue(true);
-        //assertEquals("Same token should be retrieved", expected,actual);
+        String actual = objectMapper.readValue(secondResult.getResponse().getContentAsString(), AccessToken.class).getValue();
+
+        assertEquals("Same token should be retrieved", expected,actual);
     }
 
-    private MvcResult getMvcResult(MockHttpServletRequestBuilder requestBuilder) throws Exception {
-        return mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
-                    .andReturn();
+    @Test
+    public void PostToAccesstokens_InvalidUser_Unauthorized() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = post("/accesstokens").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"badUser\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder).andExpect(status().isUnauthorized());
+
     }
+
+    /*@Test
+    public void RequestToServer_ExpiredToken_Unauthorized() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = get("/hello").header("token","testtokenvalue1234");
+        mockMvc.perform(requestBuilder).andExpect(status().isUnauthorized());
+    }*/
 
     @After
     public void tearDown() throws Exception {

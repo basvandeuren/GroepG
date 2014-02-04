@@ -31,39 +31,37 @@ public class TokenController {
     }
 
 
-     @RequestMapping(method = RequestMethod.POST, value="/request",consumes = "application/json")
-      public @ResponseBody AccessToken getToken(@RequestBody User user) {
+    @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
+    public
+    @ResponseBody
+    AccessToken getToken(@RequestBody User user) {
 
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
 
         org.hibernate.Transaction tx = session.beginTransaction();
 
-         @SuppressWarnings("JpaQlInspection") Query q = session.createQuery("from User u where u.name = :name and u.password = :password");
+        @SuppressWarnings("JpaQlInspection") Query q = session.createQuery("from User u where u.name = :name and u.password = :password");
         q.setParameter("name", user.getName());
         q.setParameter("password", user.getPassword());
         User dbUser = (User) q.uniqueResult();
 
 
-        if(dbUser == null)
-        {
-
+        if (dbUser == null) {
             tx.commit();
-
             throw new UserNotFoundException();
         }
 
 
-         AccessToken accessToken = dbUser.getToken();
-         if(accessToken == null){
-             String tokenvalue = generator.generateTokenString();
-             accessToken = new AccessToken(tokenvalue);
-             dbUser.setToken(accessToken);
-         }
-       //  session.saveOrUpdate(accessToken);
+        AccessToken accessToken = dbUser.getToken();
+        if (accessToken == null) {
+            String tokenvalue = generator.generateTokenString();
+            accessToken = new AccessToken(tokenvalue);
+            dbUser.setToken(accessToken);
+        }
+        //  session.saveOrUpdate(accessToken);
         session.saveOrUpdate(dbUser);
         tx.commit();
         return accessToken;
-
     }
 
 
