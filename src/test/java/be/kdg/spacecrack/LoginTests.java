@@ -30,7 +30,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import javax.servlet.ServletContext;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -116,15 +116,18 @@ public class LoginTests {
     @Test
     public void testUserAlreadyLoggedRelogin() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = post("/accesstokens/request");
-        MvcResult firstResult = mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
-                .andReturn();
-        AccessToken expected = objectMapper.readValue(firstResult.getResponse().getContentAsString(), AccessToken.class);
 
-        /*MvcResult secondResult = mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
-                .andReturn();
-        AccessToken actual = objectMapper.readValue(secondResult.getResponse().getContentAsString(), AccessToken.class);*/
+        MvcResult firstResult = getMvcResult(requestBuilder);
+        String expected = objectMapper.readValue(firstResult.getResponse().getContentAsString(), AccessToken.class).getValue();
+        //MvcResult secondResult = getMvcResult(requestBuilder);
+        //String actual = objectMapper.readValue(secondResult.getResponse().getContentAsString(), AccessToken.class).getValue();
         assertTrue(true);
-        //assertEquals("Same token should be retrieved", expected.getValue(),actual.getValue());
+        //assertEquals("Same token should be retrieved", expected,actual);
+    }
+
+    private MvcResult getMvcResult(MockHttpServletRequestBuilder requestBuilder) throws Exception {
+        return mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"testUsername\",\"password\":\"testPassword\"}").accept(MediaType.APPLICATION_JSON))
+                    .andReturn();
     }
 
     @After
